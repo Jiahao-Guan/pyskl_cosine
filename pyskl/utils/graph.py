@@ -23,23 +23,23 @@ def edge2mat(link, num_node):
     return A
 
 
-def normalize_digraph(A, dim=0): # 右乘对角阵，相当于列归一化
+def normalize_digraph(A, dim=0): 
     # A is a 2D square array
-    Dl = np.sum(A, dim) # dimension为0表示对每一列求和，结果为1*width；为1表示对每一行求和，结果为1*height
+    Dl = np.sum(A, dim)
     h, w = A.shape
     Dn = np.zeros((w, w))
 
     for i in range(w):
         if Dl[i] > 0:
-            Dn[i, i] = Dl[i] ** (-1) #无向图的邻接矩阵一定是对称矩阵
+            Dn[i, i] = Dl[i] ** (-1) 
 
     AD = np.dot(A, Dn)
     return AD
 
-def normalize_digraph_2(A): # 行列归一化
+def normalize_digraph_2(A): 
     # A is a 2D square array
-    D1 = np.sum(A, 1) #行和
-    D0 = np.sum(A, 0) #列和
+    D1 = np.sum(A, 1) 
+    D0 = np.sum(A, 0) 
     h, w = A.shape
     Dn = np.zeros((w, w))
 
@@ -57,7 +57,7 @@ def normalize_digraph_2(A): # 行列归一化
     return AD
 
 
-def get_hop_distance(num_node, edge, max_hop=1): # 计算结点之间的距离，最大距离为max_hop，超过此距离设为inf不可达
+def get_hop_distance(num_node, edge, max_hop=1): 
     A = np.eye(num_node)
 
     for i, j in edge:
@@ -67,9 +67,9 @@ def get_hop_distance(num_node, edge, max_hop=1): # 计算结点之间的距离�
     # compute hop steps
     hop_dis = np.zeros((num_node, num_node)) + np.inf
     transfer_mat = [
-        np.linalg.matrix_power(A, d) for d in range(max_hop + 1) # 生成一个(max_hop + 1)*num_node*num_node的矩阵
+        np.linalg.matrix_power(A, d) for d in range(max_hop + 1) 
     ]
-    arrive_mat = (np.stack(transfer_mat) > 0) #使用np.stack()转换之后可以直接计算>0，返回的矩阵中值为true或false。
+    arrive_mat = (np.stack(transfer_mat) > 0) 
     for d in range(max_hop, -1, -1):
         hop_dis[arrive_mat[d]] = d
     return hop_dis
@@ -114,7 +114,7 @@ class Graph:
     def __str__(self):
         return self.A
 
-    def get_layout(self, layout):#inward表示从四肢到中心点的连接，outward表示中心点到四肢的连接
+    def get_layout(self, layout):
         if layout == 'openpose':
             self.num_node = 18
             self.inward = [
@@ -164,7 +164,7 @@ class Graph:
         self.outward = [(j, i) for (i, j) in self.inward]
         self.neighbor = self.inward + self.outward
 
-    def stgcn_spatial(self):# stgcn中提出的空间关键点划分策略
+    def stgcn_spatial(self):
         adj = np.zeros((self.num_node, self.num_node))
         adj[self.hop_dis <= self.max_hop] = 1
         normalize_adj = normalize_digraph(adj)
@@ -173,18 +173,18 @@ class Graph:
 
         A = []
         for hop in range(self.max_hop + 1):
-            a_close = np.zeros((self.num_node, self.num_node)) # 近心
-            a_further = np.zeros((self.num_node, self.num_node)) # 远心
+            a_close = np.zeros((self.num_node, self.num_node)) 
+            a_further = np.zeros((self.num_node, self.num_node)) 
             for i in range(self.num_node):
                 for j in range(self.num_node):
                     if hop_dis[j, i] == hop:
-                        if hop_dis[j, center] >= hop_dis[i, center]: # (j,i)是近心边，从j邻接i是在靠近center
+                        if hop_dis[j, center] >= hop_dis[i, center]: 
                             a_close[j, i] = normalize_adj[j, i]
                         else:
-                            a_further[j, i] = normalize_adj[j, i] # (j,i)是远心边，从j邻接到i是在远离center
-            A.append(a_close) # 当hop等于0时，a_close描述的是根结点。# 当hop大于1时，a_close描述的是近心邻接关系。
+                            a_further[j, i] = normalize_adj[j, i] 
+            A.append(a_close) 
             if hop > 0:
-                A.append(a_further) # 当hop大于1时，a_further描述的是远心邻接关系。
+                A.append(a_further) 
         return np.stack(A)
 
     def spatial(self):
