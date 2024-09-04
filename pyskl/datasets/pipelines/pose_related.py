@@ -354,7 +354,7 @@ class ToMotion:
         motion = np.zeros_like(data)
 
         assert C in [2, 3]
-        motion[:, :T - 1] = np.diff(data, axis=1) #前T-1帧赋值为对帧数错位相减，第T帧不赋值，保留0矩阵
+        motion[:, :T - 1] = np.diff(data, axis=1) 
         if C == 2 and self.source in ['cosine','c']:
             score = (data[:, :T - 1, :, 1] + data[:, 1:, :, 1]) / 2
             motion[:, :T - 1, :, 1] = score
