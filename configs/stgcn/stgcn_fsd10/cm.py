@@ -6,7 +6,6 @@ model = dict(
     cls_head=dict(type='GCNHead', num_classes=10, in_channels=256))
 
 dataset_type = 'PoseDataset'
-# 制作数据集
 ann_file = 'data/fsd10/fsd10_kbc.pkl'
 train_pipeline = [
     #dict(type='PreNormalize2D'),
